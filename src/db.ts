@@ -5,9 +5,8 @@ export function modifyDB (query: string, ...params : any[]) {
 
     const stmt = db.prepare(query)
     
-
     return new Promise<RunResult>( (resolve,reject) => {
-        console.log(params)
+
         stmt.run( params, function (error) {
         
             if (error) {
@@ -20,6 +19,27 @@ export function modifyDB (query: string, ...params : any[]) {
         })
     }).finally(()=> {
         stmt.finalize()
+        db.close()
+    })
+    
+}
+
+export function searchDB (query: string, ...params : any[]) {
+    const db = new sqlite3.Database('db/blog.db')
+
+    return new Promise<any[]>( (resolve,reject) => {
+        
+        db.all( query, params, (error, rows) => {
+        
+            if (error) {
+                console.error(error);
+                reject(error)
+            }
+        
+            resolve(rows)
+
+        })
+    }).finally(()=> {
         db.close()
     })
     
