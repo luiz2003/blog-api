@@ -1,13 +1,10 @@
 import express from 'express'
 import cors from 'cors'
 import { PostController } from './controllers/postControllers'
-import { PostService } from './services/postService'
 class App {
     public express: express.Application
     
-    private service = new PostService()
-    
-    private postController = new PostController(this.service)
+    private postController = new PostController()
     
     public constructor () {
         this.express = express()
@@ -23,7 +20,7 @@ class App {
     }
 
     private routes(): void {
-        this.express.use('/',  this.postController.findAll)
+        this.express.get('/', (req, res)=> this.postController.findAll(req, res))
     }
 
 

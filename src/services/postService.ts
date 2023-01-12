@@ -141,6 +141,6 @@ export class PostService {
 
 }
 
-const service = new PostService()
+// const service = new PostService()
 
-service.findAll().then(res=>console.log(res))
+// service.findAll().then(res=>console.log(res))

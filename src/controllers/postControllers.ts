@@ -6,8 +6,8 @@ import { CustomError } from "../models/error";
 export class PostController{
     private service : PostService
 
-    public constructor(postService: PostService){
-        this.service = postService
+    public constructor(){
+        this.service = new PostService()
     }
 
     private handleError(res: Response , err: Error | CustomError){
@@ -24,7 +24,7 @@ export class PostController{
     public async findAll(req : Request, res : Response) {
        
         try {
-            console.log(this.service)
+            
             this.service.findAll()
             .then(response => {
                 if(response.error){
