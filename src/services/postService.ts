@@ -1,11 +1,13 @@
 import { PostRepository } from "../repositories/postRepository";
 import { Post } from "../models/post";
+import { CustomError, NotFoundError } from "../models/error";
 
 export interface ServiceReponse <T> {
     sucess: boolean 
-    error: Error | null
+    error?: Error | null | CustomError 
     data?:  T | null
 }
+
 
 export class PostService {
     
@@ -15,10 +17,9 @@ export class PostService {
         this.repo = new PostRepository()
     }
 
-    public async findALl() : Promise < ServiceReponse<Post[]> > {
+    public async findAll() : Promise < ServiceReponse<Post[]> > {
         const response: ServiceReponse<Post[]> = {
             sucess: true,
-            error: null
         }
 
         try {
@@ -27,17 +28,16 @@ export class PostService {
         }
         catch(error) {
             response.sucess = false
-            if(error instanceof Error) 
+            if(error instanceof Error || error instanceof CustomError) 
                 response.error = error
+            
+            return response
         }
-
-       return response 
     }
 
     public async findById(id:number): Promise< ServiceReponse<Post> > {
         const response: ServiceReponse<Post> = {
             sucess: true,
-            error: null
         }
 
         try {
@@ -50,7 +50,7 @@ export class PostService {
         }
         catch(error) {
             response.sucess = false
-            if(error instanceof Error) 
+            if(error instanceof Error || error instanceof CustomError) 
                 response.error = error
         }
 
@@ -61,7 +61,6 @@ export class PostService {
 
         const response: ServiceReponse<Post[]> = {
             sucess: true,
-            error : null
         }
 
         try {
@@ -74,7 +73,7 @@ export class PostService {
         }
         catch(error) {
             response.sucess = false
-            if(error instanceof Error) 
+            if(error instanceof Error || error instanceof CustomError) 
                 response.error = error
         }
 
@@ -85,7 +84,6 @@ export class PostService {
         
         const response: ServiceReponse<null> = {
             sucess: true,
-            error: null
         }
 
         try {
@@ -107,7 +105,6 @@ export class PostService {
 
         const response: ServiceReponse<null> = {
             sucess: true,
-            error: null
         }
 
         try {
@@ -116,7 +113,7 @@ export class PostService {
         }
         catch(error) {
             response.sucess = false
-            if(error instanceof Error) 
+            if(error instanceof Error|| error instanceof CustomError ) 
                 response.error = error
         }
 
@@ -127,7 +124,6 @@ export class PostService {
 
         const response: ServiceReponse<null> = {
             sucess: true,
-            error: null
         }
 
         try {
@@ -136,7 +132,7 @@ export class PostService {
         }
         catch(error) {
             response.sucess = false
-            if(error instanceof Error) 
+            if(error instanceof Error || error instanceof CustomError) 
                 response.error = error
         }
 
@@ -144,3 +140,7 @@ export class PostService {
     }
 
 }
+
+const service = new PostService()
+
+service.findAll().then(res=>console.log(res))
