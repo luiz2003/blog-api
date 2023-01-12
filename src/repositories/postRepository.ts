@@ -1,4 +1,6 @@
+import { rejects } from "assert";
 import { modifyDB, searchDB } from "../db";
+import { InvalidIdError } from "../models/error";
 import { Post } from "../models/post";
 import { RunResult } from "sqlite3";
 
@@ -19,18 +21,35 @@ export class PostRepository {
     }
 
     public async newPost({author, content}: {author: string, content: string}): Promise<RunResult> {
-        // put error verification in service
         return modifyDB("insert into posts (author, content) values (?, ?)", author, content)
     }
 
     public async editPost({id, author, content}: {id: number, author?:string, content?: string}): Promise<RunResult> {
-        return modifyDB(
-            "update posts set author = IFNULL (?, author), content = IFNULL(?, content) where id = ?",
-            author, content, id
-        )
+        
+        return new Promise<RunResult >(async (resolve, reject)=>{
+            const  res = await modifyDB(
+                "update posts set author = IFNULL (?, author), content = IFNULL(?, content) where id = ?",
+                author, content, id
+            )
+    
+            if(res.changes == 0){
+                reject(new InvalidIdError())
+            }
+            
+            resolve(res)
+        })
     }
 
     public async deletePost(id: number): Promise<RunResult> {
-        return modifyDB("delete from posts where id = ? ", id)
+        // return modifyDB("delete from posts where id = ? ", id)
+        return new Promise<RunResult>(async (resolve, reject)=>{
+            const res = await modifyDB("delete from posts where id = ? ", id)
+
+            if(res.changes == 0){
+                reject(new InvalidIdError())
+            }
+            
+            resolve(res)
+        })
     }
 }

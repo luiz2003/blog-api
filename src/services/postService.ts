@@ -65,7 +65,8 @@ export class PostService {
 
         try {
             response.data = await this.repo.findByAuthor(author)
-            if (!response.data){
+
+            if (response.data.length == 0 ) {
                 response.sucess = false
                 response.error = new NotFoundError("Author")
             }
@@ -140,7 +141,3 @@ export class PostService {
     }
 
 }
-
-// const service = new PostService()
-
-// service.findAll().then(res=>console.log(res))

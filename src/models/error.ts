@@ -26,3 +26,11 @@ export class NotFoundError extends CustomError {
     }
 
 }
+
+export class InvalidIdError extends CustomError {
+    public statusCode = 400
+    
+    public constructor(){
+        super("InvalidId Error", 400, "Invalid Id")
+    }
+}
