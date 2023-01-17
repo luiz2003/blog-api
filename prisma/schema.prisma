@@ -18,18 +18,18 @@ model Post {
 
 model Author {
   id  Int @id @default(autoincrement())
-  name String
+  name String @unique
   posts Post[]
 }
 
 model Category {
   id  Int @id @default(autoincrement())
-  name  String
+  name  String @unique
   posts Post[]
 }
 
 model Likes {
   post Post @relation(fields: [postId], references: [id])
   postId  Int @id
-  amount Int
+  amount Int @default(0)
 }
