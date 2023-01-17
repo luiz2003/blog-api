@@ -9,7 +9,13 @@ export class PostRepository {
     }
 
     public async findAll() {
-        return await this.prisma.post.findMany({include: { categories: true} })
+        return await this.prisma.post.findMany(
+            {select:{
+                id: true,
+                author: true,
+                content: true,
+                categories: true
+            }})
     }
 
     public async findById(id: number) {
