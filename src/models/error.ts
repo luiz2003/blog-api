@@ -21,3 +21,7 @@ export class InvalidIdError implements CustomError {
     public message = "Invalid id value"
     public name =  "InvalidIdError"
 }
+
+export function isCustomError(obj: any): obj is CustomError {
+    return 'statusCode' in obj && 'name' in obj && 'message' in obj
+}

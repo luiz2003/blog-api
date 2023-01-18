@@ -22,8 +22,12 @@ export class PostRepository {
         return await this.prisma.post.findUnique({ where: { id } })
     }
 
-    public async findByAuthor(authorId: number) {
-        return await this.prisma.post.findMany({ where: { authorId } })
+    public async findByAuthor(author: string) {
+        return await this.prisma.post.findMany({ where: { 
+            author:{
+                name: author
+            }
+         } })
     }
 
     public async findByCategory(category : string) {
@@ -62,34 +66,35 @@ export class PostRepository {
           }})
     }
 
-    public async editPost(id: number, body : {
-        author: Author,
+    public async editPost(body: {
+        id: number
+        authorName: string,
         content: string,
-        categories: Category[]
+        categories: string[]
     }) {
         return await this.prisma.post.update({
             where: {
-                id
+                id: body.id
             },
             data: {
                 content: body.content,
                 author: {
                     connectOrCreate: {
                         where: {
-                            name: body.author.name
+                            name: body.authorName
                         },
                         create: {
-                            name: body.author.name
+                            name: body.authorName
                         }
                     }
                 },
                 categories: {
                     connectOrCreate: body.categories.map((category)=>({
                         where: {
-                            name: category.name
+                            name: category
                         },
                         create: {
-                            name: category.name
+                            name: category
                         }
                     }))
                     
@@ -107,7 +112,7 @@ export class PostRepository {
     }
 }
 
-interface INewPost {
+export interface INewPost {
     author: string
     content: string
     categories : string[]
@@ -132,10 +137,12 @@ interface INewPost {
 //     },
 // ]
 
-//const repo = new PostRepository()
+const repo = new PostRepository()
 
 // posts.forEach(async post => {
 //     console.log(await repo.newPost(post))
 // }
 
 //repo.findAll().then(res=> console.dir(res, {depth: null}))
+
+repo.findById(9).then(res=>console.dir(res, {depth: null}))
