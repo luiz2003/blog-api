@@ -22,12 +22,8 @@ export class PostRepository {
         return await this.prisma.post.findUnique({ where: { id } })
     }
 
-    public async findByAuthor(authorId?: number, author?: string) {
-        return await this.prisma.post.findMany({ where: {
-            ...(authorId? {authorId} : {author : {
-                name: author
-            }})
-        }})
+    public async findByAuthor(authorId: number) {
+        return await this.prisma.post.findMany({ where: { authorId } })
     }
 
     public async findByCategory(category : string) {
