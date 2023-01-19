@@ -25,3 +25,15 @@ export class InvalidIdError implements CustomError {
 export function isCustomError(obj: any): obj is CustomError {
     return 'statusCode' in obj && 'name' in obj && 'message' in obj
 }
+
+export function errorGenerator( data: any, subject?:string){
+    switch (data) {
+        case data instanceof Error :
+            return data
+        case data == null :
+            return new NotFoundError(subject as string)
+        default:
+            break
+        
+    }
+}

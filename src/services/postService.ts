@@ -1,27 +1,19 @@
 import { INewPost, PostRepository } from "../repositories/postRepository";
-import { CustomError, NotFoundError, isCustomError } from "../models/error";
+import { CustomError, errorGenerator, NotFoundError, isCustomError } from "../models/error";
 import { Fail } from "../models/fail";
 import { Sucess } from "../models/sucess";
 
 export class PostService {
     
     private repo : PostRepository
+    private errorGenerator: (data: any, subject?: string)=> CustomError | Error
 
     constructor() {
         this.repo = new PostRepository()
+        this.errorGenerator = errorGenerator
     }
 
-    private errorGenerator( data: any, subject?:string){
-        switch (data) {
-            case data instanceof Error :
-                return data
-            case data == null :
-                return new NotFoundError(subject as string)
-            default:
-                break
-            
-        }
-    }
+
 
     public async findAll()  {
         const data = await this.repo.findAll()

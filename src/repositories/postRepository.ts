@@ -137,7 +137,7 @@ export interface INewPost {
 //     },
 // ]
 
-const repo = new PostRepository()
+//const repo = new PostRepository()
 
 // posts.forEach(async post => {
 //     console.log(await repo.newPost(post))
@@ -145,4 +145,4 @@ const repo = new PostRepository()
 
 //repo.findAll().then(res=> console.dir(res, {depth: null}))
 
-repo.findById(9).then(res=>console.dir(res, {depth: null}))
+//repo.findById(9).then(res=>console.dir(res, {depth: null}))
