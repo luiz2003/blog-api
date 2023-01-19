@@ -6,7 +6,7 @@ import { Sucess } from "../models/sucess";
 export class PostService {
     
     private repo : PostRepository
-    private errorGenerator: (data: any, subject?: string)=> CustomError | Error
+    private errorGenerator: (data: object, subject?: string)=> CustomError | Error
 
     constructor() {
         this.repo = new PostRepository()
@@ -29,7 +29,7 @@ export class PostService {
         const data = await this.repo.findById(id)
         
         if(data instanceof Error || data == null){
-            return new Fail(this.errorGenerator(data, "Post"))
+            return new Fail(this.errorGenerator(data as Error, "Post"))
         }
 
         return new Sucess(data)
@@ -77,7 +77,7 @@ export class PostService {
 
         const exists = await this.repo.findById(id)
         if(exists == null || !exists ){
-            return new Fail(this.errorGenerator(new NotFoundError("Post")))
+            return new Fail(new NotFoundError("Post"))
         }
 
         const data = await this.repo.deletePost(id)
