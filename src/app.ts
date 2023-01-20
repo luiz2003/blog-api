@@ -22,10 +22,10 @@ class App {
     private routes(): void {
         this.express.get('/', (req, res)=> this.postController.findAll(req, res))
         this.express.get('/post/:id', (req, res)=> this.postController.findById(req, res))
-        this.express.get('/author', (req, res)=> this.postController.findByAuthor(req, res))
+        this.express.get('/posts', (req, res)=> this.postController.findByAuthor(req, res))
         this.express.post('/post',(req, res)=> this.postController.newPost(req, res))
-        this.express.patch('/post',(req, res)=> this.postController.editPost(req, res))
-        this.express.delete('/post',(req, res)=> this.postController.deletePost(req, res))
+        this.express.put('/post',(req, res)=> this.postController.editPost(req, res))
+        this.express.delete('/post/:id',(req, res)=> this.postController.deletePost(req, res))
     }
 
 }

@@ -1,6 +1,4 @@
 import {  PrismaClient  }  from "@prisma/client" 
-import { Category } from "../models/category"
-import { Author } from "../models/author"
 export class PostRepository {
     prisma: PrismaClient
 
@@ -68,7 +66,7 @@ export class PostRepository {
 
     public async editPost(body: {
         id: number
-        authorName: string,
+        author: string,
         content: string,
         categories: string[]
     }) {
@@ -81,10 +79,10 @@ export class PostRepository {
                 author: {
                     connectOrCreate: {
                         where: {
-                            name: body.authorName
+                            name: body.author
                         },
                         create: {
-                            name: body.authorName
+                            name: body.author
                         }
                     }
                 },

@@ -38,7 +38,7 @@ export class PostService {
     public async findbyAuthor(author: string){
         const data = await this.repo.findByAuthor(author)
            
-        if(data instanceof Error || data == null){
+        if(data instanceof Error || data == null|| data.length == 0){
             return new Fail(this.errorGenerator(data, "Author"))
         }
 
@@ -57,14 +57,14 @@ export class PostService {
     }
 
     public async editPost( 
-        { id,  authorName, content, categories} : {id: number, authorName: string, content: string, categories: string[]}  
+        { id,  author, content, categories} : {id: number, author: string, content: string, categories: string[]}  
     ) {
         const exists = await this.repo.findById(id)
         if(exists == null || !exists){
             return new Fail(this.errorGenerator(new NotFoundError("Post")))
         }
 
-        const data = await this.repo.editPost( { id, authorName, content, categories})      
+        const data = await this.repo.editPost( { id, author, content, categories})      
         
         if(data instanceof Error){
             return new Fail(this.errorGenerator(data))

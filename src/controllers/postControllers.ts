@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import { PostService } from "../services/postService";
-import { CustomError } from "../models/error";
+import { CustomError, isCustomError } from "../models/error";
 import { isValidPost } from "../models/post";
+import { Fail } from "../models/fail";
+import { Sucess } from "../models/sucess";
 
 
 export class PostController{
@@ -11,169 +13,131 @@ export class PostController{
         this.service = new PostService()
     }
 
-    private handleError(res: Response , err: Error | CustomError){
+    private handleError(res: Response , err: Error | CustomError ){
         
         const errMsg = {errorMessage: err.message}
 
-        if(err instanceof CustomError){
+        if(isCustomError(err)){
             return res.status(err.statusCode).json(errMsg)
         }
 
-        res.status(500).json(errMsg)
+        return res.status(500).json(errMsg)
     }
 
     public async findAll(req : Request, res : Response) {
        
-        try {
-            
-            this.service.findAll()
-            .then(response => {
-                if(response.error){
-                    return this.handleError(res, response.error)
-                }
+        this.service.findAll()
+        .then(response => {
+            if(response instanceof Fail){
+                this.handleError(res, response.error)
+            }
+            if(response instanceof Sucess){
+                res.status(200).json(response.data)
+            }
+        })
 
-                if(response.sucess){
-                    res.status(200).json(response)
-                }
-            })
-
-        }
-        catch(error){
-            console.error(error)
-            res.status(500).json(error)
-        }
     }
   
     public async findById(req : Request, res : Response) {
-       
-        try {
-        
-            this.service.findById(parseInt(req.params.id))
-            .then(response => {
-                if(response.error){
-                   return this.handleError(res, response.error)
-                }
+    
+        this.service.findById(parseInt(req.params.id))
+        .then(response => {
+            if(response instanceof Fail){
+                this.handleError(res, response.error)
+            }
+            if(response instanceof Sucess){
+                res.status(200).json(response.data)
+            }
+        })
 
-                if(response.sucess){
-                    res.status(200).json(response)
-                }
-            })
-
-        }
-        catch(error){
-            console.error(error)
-            res.status(500).json(error)
-        }
     }
     
+    
     public async findByAuthor(req : Request, res : Response) {
-       
-        try {
-        
-            this.service.findbyAuthor(req.body.author)
-            .then(response => {
-                if(response.error){
-                   return this.handleError(res, response.error)
-                }
+        const authorName =  (req.query.author as string) .replace("+", " ")
+        this.service.findbyAuthor(authorName)
+        .then(response => {
+            if(response instanceof Fail){
+                this.handleError(res, response.error)
+            }
+            if(response instanceof Sucess){
+                res.status(200).json(response.data)
+            }
+        })
 
-                if(response.sucess){
-                    res.status(200).json(response)
-                }
-            })
-
-        }
-        catch(error){
-            console.error(error)
-            res.status(500).json(error)
-        }
     }
 
     public async newPost(req: Request, res: Response) {
 
         const post = {
             author: req.body.author,
-            content: req.body.content
+            content: req.body.content,
+            categories: req.body.categories
         }
         console.log(post)
-        try{
-            if(!isValidPost(post)) {
-                return res.status(400).json({msg: "ERROR: invalid post"})
+
+        if (!isValidPost(post)){
+            return res.status(400).json({message: "Bad request: Missing parameters"})
+        }
+
+        this.service.newPost(post)
+        .then(response => {
+            if(response instanceof Fail){
+                return this.handleError(res, response.error)
             }
 
-            this.service.newPost(post)
-            .then(response => {
-                if(response.error){
-                   return this.handleError(res, response.error)
-                }
-
-                if(response.sucess){
-                    res.status(200).json(response)
-                }
-            })
-        }
-        catch(error){
-            console.log(error)
-            res.status(500).json(error)
-        }
+            if(response instanceof Sucess){
+                return res.status(200).json(response.data)
+            }
+        })
     }
     
     public async editPost(req: Request, res: Response) {
         
-        const post: any = {id: req.body.id}
-        const author = req.body.author
-        const content = req.body.content
-
-        if(author)
-            post.author = author
-        if(content)
-        post.content = content
+        const post =  {
+            id: parseInt(req.body.id),
+            author: req.body.author as string,
+            content: req.body.content as string,
+            categories: req.body.categories as string[]
+        }
         
-        try{
-            if(! post.id || (!post.author && !post.content) ) {
-                return res.status(400).json({msg: "ERROR: invalid edit"})
+        if(!post.id) {
+            return res.status(400).json({msg: "Error: missing id"})
+        }
+        if(!isValidPost(post)){
+            return res.status(400).json({msg: "Error: missing parameter"})
+        }
+
+        this.service.editPost(post)
+        .then(response => {
+            if(response instanceof Fail){
+                return this.handleError(res, response.error)
             }
 
-            this.service.editPost(post)
-            .then(response => {
-                if(response.error){
-                   return this.handleError(res, response.error)
-                }
-
-                if(response.sucess){
-                    res.status(200).json(response)
-                }
-            })
-        }
-        catch(error){
-            console.log(error)
-            res.status(500).json(error)
-        }
+            if(response instanceof Sucess){
+                return res.status(200).json(response.data)
+            }
+        })
+        
     }
 
     public async deletePost(req: Request, res: Response){
-        const id =  req.body.id
+        const id = parseInt(req.params.id)
         
         if(!id) {
             return res.status(400).json({msg: "ERROR: No id provided"})
         }
 
-        try{
+        this.service.deletePost(id)
+        .then(response => {
+            if(response instanceof Fail){
+                return this.handleError(res, response.error)
+            }
 
-            this.service.deletePost(id)
-            .then(response => {
-                if(response.error){
-                   return this.handleError(res, response.error)
-                }
-
-                if(response.sucess){
-                    res.status(200).json(response)
-                }
-            })
-        }
-        catch(error){
-            console.log(error)
-            res.status(500).json(error)
-        }
+            if(response instanceof Sucess){
+                res.status(200).json(response.data)
+            }
+        })
     }
 }
 

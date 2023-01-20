@@ -26,11 +26,11 @@ export function isCustomError(obj: any): obj is CustomError {
     return 'statusCode' in obj && 'name' in obj && 'message' in obj
 }
 
-export function errorGenerator( data: object , subject?:string): Error | CustomError{
+export function errorGenerator( data: object | object[] , subject?:string): Error | CustomError{
     switch (true) {
         case data instanceof Error :
             return data as Error
-        case data === null :
+        case data === null|| (data as Array<object>).length == 0 :
             return new NotFoundError(subject as string)
         default:
             return new Error("Unkown error")
