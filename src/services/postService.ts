@@ -1,143 +1,92 @@
-import { PostRepository } from "../repositories/postRepository";
-import { Post } from "../models/post";
-import { CustomError, NotFoundError } from "../models/error";
-
-export interface ServiceReponse <T> {
-    sucess: boolean 
-    error?: Error | null | CustomError 
-    data?:  T | null
-}
-
+import { INewPost, PostRepository } from "../repositories/postRepository";
+import { CustomError, errorGenerator, NotFoundError, isCustomError } from "../models/error";
+import { Fail } from "../models/fail";
+import { Sucess } from "../models/sucess";
 
 export class PostService {
     
     private repo : PostRepository
+    private errorGenerator: (data: object, subject?: string)=> CustomError | Error
 
     constructor() {
         this.repo = new PostRepository()
+        this.errorGenerator = errorGenerator
     }
 
-    public async findAll() : Promise < ServiceReponse<Post[]> > {
-        const response: ServiceReponse<Post[]> = {
-            sucess: true,
+
+
+    public async findAll()  {
+        const data = await this.repo.findAll()
+
+        if(data instanceof Error){
+            return new Fail(this.errorGenerator(data))
         }
 
-        try {
-            response.data = await this.repo.findAll()
-            return response
-        }
-        catch(error) {
-            response.sucess = false
-            if(error instanceof Error || error instanceof CustomError) 
-                response.error = error
-            
-            return response
-        }
+        return new Sucess(data)
     }
 
-    public async findById(id:number): Promise< ServiceReponse<Post> > {
-        const response: ServiceReponse<Post> = {
-            sucess: true,
-        }
-
-        try {
-            response.data = await this.repo.findById(id)
-            if (!response.data){
-                response.sucess = false
-                response.error = new NotFoundError("Id")
-            }
-            return response
-        }
-        catch(error) {
-            response.sucess = false
-            if(error instanceof Error || error instanceof CustomError) 
-                response.error = error
-        }
-
-       return response 
-    }
-
-    public async findbyAuthor(author: string): Promise< ServiceReponse<Post[]> >{
-
-        const response: ServiceReponse<Post[]> = {
-            sucess: true,
-        }
-
-        try {
-            response.data = await this.repo.findByAuthor(author)
-
-            if (response.data.length == 0 ) {
-                response.sucess = false
-                response.error = new NotFoundError("Author")
-            }
-            return response
-        }
-        catch(error) {
-            response.sucess = false
-            if(error instanceof Error || error instanceof CustomError) 
-                response.error = error
-        }
-
-       return response 
-    }
-
-    public async newPost({author, content} : {author: string, content: string}): Promise<ServiceReponse<null> >{
+    public async findById(id:number) {
+        const data = await this.repo.findById(id)
         
-        const response: ServiceReponse<null> = {
-            sucess: true,
+        if(data instanceof Error || data == null){
+            return new Fail(this.errorGenerator(data as Error, "Post"))
         }
 
-        try {
-            await this.repo.newPost({author, content})
-            return response
-        }
-        catch(error) {
-            response.sucess = false
-            if(error instanceof Error) 
-                response.error = error
-        }
-
-       return response 
+        return new Sucess(data)
     }
 
-    public async editPost(
-        {id, author, content} : {id:number, author?: string, content: string}
-    ): Promise< ServiceReponse<null> > {
-
-        const response: ServiceReponse<null> = {
-            sucess: true,
+    public async findbyAuthor(author: string){
+        const data = await this.repo.findByAuthor(author)
+           
+        if(data instanceof Error || data == null|| data.length == 0){
+            return new Fail(this.errorGenerator(data, "Author"))
         }
 
-        try {
-            await this.repo.editPost({id, author, content})
-            return response
-        }
-        catch(error) {
-            response.sucess = false
-            if(error instanceof Error|| error instanceof CustomError ) 
-                response.error = error
-        }
-
-       return response 
+        return new Sucess(data)
     }
 
-    public async deletePost(id: number): Promise< ServiceReponse<null> > {
+    public async newPost({author, content, categories} : INewPost) {
+        
+        const data = await this.repo.newPost({author, content, categories})
+         
+        if(data instanceof Error){
+            return new Fail(this.errorGenerator(data))
+        }
+        
+        return new Sucess(data)
+    }
 
-        const response: ServiceReponse<null> = {
-            sucess: true,
+    public async editPost( 
+        { id,  author, content, categories} : {id: number, author: string, content: string, categories: string[]}  
+    ) {
+        const exists = await this.repo.findById(id)
+        if(exists == null || !exists){
+            return new Fail(this.errorGenerator(new NotFoundError("Post")))
         }
 
-        try {
-            await this.repo.deletePost(id)
-            return response
-        }
-        catch(error) {
-            response.sucess = false
-            if(error instanceof Error || error instanceof CustomError) 
-                response.error = error
+        const data = await this.repo.editPost( { id, author, content, categories})      
+        
+        if(data instanceof Error){
+            return new Fail(this.errorGenerator(data))
         }
 
-       return response 
+        return new Sucess(data)
+    }
+
+    public async deletePost(id: number) {
+
+        const exists = await this.repo.findById(id)
+        if(exists == null || !exists ){
+            return new Fail(new NotFoundError("Post"))
+        }
+
+        const data = await this.repo.deletePost(id)
+        if(data instanceof Error){
+            return new Fail(this.errorGenerator(data))
+        }
+
+        return new Sucess(data)
+            
     }
 
 }

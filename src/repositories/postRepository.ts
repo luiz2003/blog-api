@@ -1,55 +1,146 @@
-import { rejects } from "assert";
-import { modifyDB, searchDB } from "../db";
-import { InvalidIdError } from "../models/error";
-import { Post } from "../models/post";
-import { RunResult } from "sqlite3";
-
+import {  PrismaClient  }  from "@prisma/client" 
 export class PostRepository {
+    prisma: PrismaClient
 
-    public async findAll(): Promise<Post[]> {
-        return await searchDB('select * from posts')
+    public constructor(){
+        this.prisma = new PrismaClient()
     }
 
-    public async findById(id: number) : Promise<Post> {
-        const arr = await searchDB("select * from posts where id = ?", id)
-
-        return arr[0]//if invalid id returns undefined
+    public async findAll() {
+        return await this.prisma.post.findMany(
+            {select:{
+                id: true,
+                author: true,
+                content: true,
+                categories: true
+            }})
     }
 
-    public async findByAuthor(author: string): Promise<Post[]>{
-        return await searchDB("select * from posts where author = ? ", author) //if no posts by author returns []
+    public async findById(id: number) {
+        return await this.prisma.post.findUnique({ where: { id } })
     }
 
-    public async newPost({author, content}: {author: string, content: string}): Promise<RunResult> {
-        return modifyDB("insert into posts (author, content) values (?, ?)", author, content)
-    }
-
-    public async editPost({id, author, content}: {id: number, author?:string, content?: string}): Promise<RunResult> {
-        
-        return new Promise<RunResult >(async (resolve, reject)=>{
-            const  res = await modifyDB(
-                "update posts set author = IFNULL (?, author), content = IFNULL(?, content) where id = ?",
-                author, content, id
-            )
-    
-            if(res.changes == 0){
-                reject(new InvalidIdError())
+    public async findByAuthor(author: string) {
+        return await this.prisma.post.findMany({ where: { 
+            author:{
+                name: author
             }
-            
-            resolve(res)
+         } })
+    }
+
+    public async findByCategory(category : string) {
+        return await this.prisma.category.findMany({
+            where: {name: category},
+            select: {
+                posts: true
+            }
         })
     }
 
-    public async deletePost(id: number): Promise<RunResult> {
-        // return modifyDB("delete from posts where id = ? ", id)
-        return new Promise<RunResult>(async (resolve, reject)=>{
-            const res = await modifyDB("delete from posts where id = ? ", id)
+    public async newPost(post: INewPost) {
+        return await this.prisma.post.create({ data: {
+                content: post.content,
+                author: {
+                    connectOrCreate: {
+                        where:{
+                            name : post.author
+                        },
+                        create : {
+                           name: post.author
+                        }
+                    }
+                },
+                categories: {
+                    connectOrCreate: post.categories.map((category)=>({
+                        where: {
+                            name: category
+                        },
+                        create: {
+                            name: category
+                        }
+                    }))
+                    
+                }
+          }})
+    }
 
-            if(res.changes == 0){
-                reject(new InvalidIdError())
+    public async editPost(body: {
+        id: number
+        author: string,
+        content: string,
+        categories: string[]
+    }) {
+        return await this.prisma.post.update({
+            where: {
+                id: body.id
+            },
+            data: {
+                content: body.content,
+                author: {
+                    connectOrCreate: {
+                        where: {
+                            name: body.author
+                        },
+                        create: {
+                            name: body.author
+                        }
+                    }
+                },
+                categories: {
+                    connectOrCreate: body.categories.map((category)=>({
+                        where: {
+                            name: category
+                        },
+                        create: {
+                            name: category
+                        }
+                    }))
+                    
+                }
             }
-            
-            resolve(res)
+        })
+    }
+
+    public async deletePost(id: number) {
+        return await this.prisma.post.delete({
+            where:{
+                id
+            }
         })
     }
 }
+
+export interface INewPost {
+    author: string
+    content: string
+    categories : string[]
+}
+// const posts : INewPost[] = [
+//     {
+//         author: "Nikolas Tesla",
+//         content: "ZAP",
+//         categories: ["Science", "Innovation"]
+//     },
+
+//     {
+//         author: "Bill Gates",
+//         content: "I love windows",
+//         categories: ["Technology", "Software", "Innovation"]
+//     },
+
+//     {
+//         author: "Nikolas Tesla",
+//         content: "ELECTRIC CAGE",
+//         categories: ["Science"]
+//     },
+// ]
+
+//const repo = new PostRepository()
+
+// posts.forEach(async post => {
+//     console.log(await repo.newPost(post))
+// }
+
+//repo.findAll().then(res=> console.dir(res, {depth: null}))
+
+//repo.findById(9).then(res=>console.dir(res, {depth: null}))
